@@ -1,21 +1,21 @@
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 
-class QuestionWidget extends StatelessWidget {
-  final String questionText;
-  final bool isMandatory;
+// class QuestionWidget extends StatelessWidget {
+//   final String questionText;
+//   final bool isMandatory;
 
-  QuestionWidget({
-    required this.questionText,
-    required this.isMandatory,
-  });
+//   QuestionWidget({
+//     required this.questionText,
+//     required this.isMandatory,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(
-        questionText + (isMandatory ? ' (Obligatoria)' : ''),
-        style: TextStyle(fontSize: 16),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return ListTile(
+//       title: Text(
+//         questionText + (isMandatory ? ' (Obligatoria)' : ''),
+//         style: TextStyle(fontSize: 16),
+//       ),
+//     );
+//   }
+// }

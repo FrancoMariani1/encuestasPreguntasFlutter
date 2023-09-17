@@ -23,8 +23,29 @@ class _SurveyAppState extends State<SurveyApp> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final TextEditingController _surveyController = TextEditingController();
   final TextEditingController _questionController = TextEditingController();
+  final TextEditingController _editQuestionController = TextEditingController();
   String _selectedSurvey = '';
   bool _isMandatory = false;
+
+  Future<void> _editQuestion(
+      int questionId, String newQuestionText, bool isMandatory) async {
+    try {
+      // Llama al método para editar la pregunta en tu clase DatabaseHelper
+      await _dbHelper.updateQuestion(
+          _selectedSurvey, questionId, newQuestionText, isMandatory);
+    } catch (e) {
+      print('Error al editar la pregunta: $e');
+    }
+  }
+
+  Future<void> _deleteQuestion(int questionId) async {
+    try {
+      // Llama al método para eliminar la pregunta en tu clase DatabaseHelper
+      await _dbHelper.deleteQuestion(_selectedSurvey, questionId);
+    } catch (e) {
+      print('Error al eliminar la pregunta: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +99,7 @@ class _SurveyAppState extends State<SurveyApp> {
               child: Text('Agregar Pregunta'),
             ),
             Expanded(
-              child: FutureBuilder<List<String>>(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
                 future: _dbHelper.getQuestionsForSurvey(_selectedSurvey),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -90,8 +111,83 @@ class _SurveyAppState extends State<SurveyApp> {
                     return ListView.builder(
                       itemCount: questions.length,
                       itemBuilder: (context, index) {
+                        final question = questions[index];
                         return ListTile(
-                          title: Text(questions[index]),
+                          title: Text(question['text']),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        content: TextField(
+                                          controller: _editQuestionController,
+                                          decoration: InputDecoration(
+                                            labelText: 'Editar Pregunta',
+                                          ),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              _editQuestion(
+                                                  question['id'],
+                                                  _editQuestionController.text,
+                                                  question['isMandatory']);
+                                              Navigator.of(context).pop();
+                                              setState(() {});
+                                            },
+                                            child: Text('Editar'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: Text('Cancelar'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: Text('Eliminar Pregunta'),
+                                        content: Text(
+                                            '¿Estás seguro de eliminar esta pregunta?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              _deleteQuestion(question['id']);
+                                              Navigator.of(context).pop();
+                                              setState(() {});
+                                            },
+                                            child: Text('Eliminar'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: Text('Cancelar'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                  setState(() {});
+                                },
+                              ),
+                            ],
+                          ),
                         );
                       },
                     );
@@ -105,6 +201,212 @@ class _SurveyAppState extends State<SurveyApp> {
     );
   }
 }
+
+
+// import 'package:flutter/material.dart';
+// import 'database/database.dart';
+
+// void main() {
+//   runApp(MyApp());
+// }
+
+// class MyApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       home: SurveyApp(),
+//     );
+//   }
+// }
+
+// class SurveyApp extends StatefulWidget {
+//   @override
+//   _SurveyAppState createState() => _SurveyAppState();
+// }
+
+// class _SurveyAppState extends State<SurveyApp> {
+//   final DatabaseHelper _dbHelper = DatabaseHelper();
+//   final TextEditingController _surveyController = TextEditingController();
+//   final TextEditingController _questionController = TextEditingController();
+//   final TextEditingController _editQuestionController = TextEditingController();
+//   String _selectedSurvey = '';
+//   bool _isMandatory = false;
+
+//   Future<void> _editQuestion(
+//       int questionId, String newQuestionText, bool isMandatory) async {
+//     try {
+//       // Llama al método para editar la pregunta en tu clase DatabaseHelper
+//       await _dbHelper.updateQuestion(
+//           _selectedSurvey, questionId, newQuestionText, isMandatory);
+//     } catch (e) {
+//       print('Error al editar la pregunta: $e');
+//     }
+//   }
+
+//   Future<void> _deleteQuestion(int questionId) async {
+//     try {
+//       // Llama al método para eliminar la pregunta en tu clase DatabaseHelper
+//       await _dbHelper.deleteQuestion(_selectedSurvey, questionId);
+//     } catch (e) {
+//       print('Error al eliminar la pregunta: $e');
+//     }
+//   }
+
+  
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('App de Encuestas'),
+//       ),
+//       body: Padding(
+//         padding: const EdgeInsets.all(8.0),
+//         child: Column(
+//           children: [
+//             TextField(
+//               controller: _surveyController,
+//               decoration: InputDecoration(
+//                 labelText: 'Nombre de la encuesta',
+//               ),
+//             ),
+//             ElevatedButton(
+//               onPressed: () async {
+//                 await _dbHelper.insertSurvey(_surveyController.text);
+//                 setState(() {
+//                   _selectedSurvey = _surveyController.text;
+//                 });
+//               },
+//               child: Text('Crear Encuesta'),
+//             ),
+//             TextField(
+//               controller: _questionController,
+//               decoration: InputDecoration(
+//                 labelText: 'Texto de la pregunta',
+//               ),
+//             ),
+//             CheckboxListTile(
+//               title: Text('¿Es obligatoria?'),
+//               value: _isMandatory,
+//               onChanged: (newValue) {
+//                 setState(() {
+//                   _isMandatory = newValue!;
+//                 });
+//               },
+//             ),
+//             ElevatedButton(
+//               onPressed: () async {
+//                 await _dbHelper.insertQuestion(
+//                   _selectedSurvey,
+//                   _questionController.text,
+//                   _isMandatory,
+//                 );
+//                 setState(() {});
+//               },
+//               child: Text('Agregar Pregunta'),
+//             ),
+//             Expanded(
+//               child: FutureBuilder<List<String>>(
+//                 future: _dbHelper.getQuestionsForSurvey(_selectedSurvey),
+//                 builder: (context, snapshot) {
+//                   if (snapshot.connectionState == ConnectionState.waiting) {
+//                     return Center(child: CircularProgressIndicator());
+//                   } else if (snapshot.hasError) {
+//                     return Center(child: Text('Error: ${snapshot.error}'));
+//                   } else {
+//                     final questions = snapshot.data ?? [];
+//                     return ListView.builder(
+//                       itemCount: questions.length,
+//                       itemBuilder: (context, index) {
+//                         return ListTile(
+//                           title: Text(questions[index]),
+//                           trailing: Row(
+//                             mainAxisSize: MainAxisSize.min,
+//                             children: [
+//                               IconButton(
+//                                 icon: Icon(Icons.edit),
+//                                 onPressed: () {
+//                                   showDialog(
+//                                     context: context,
+//                                     builder: (context) {
+//                                       return AlertDialog(
+//                                         content: TextField(
+//                                           controller: _editQuestionController,
+//                                           decoration: InputDecoration(
+//                                             labelText: 'Editar Pregunta',
+//                                           ),
+//                                         ),
+//                                         actions: [
+//                                           TextButton(
+//                                             onPressed: () {
+//                                               _editQuestion(
+//                                                   index,
+//                                                   _editQuestionController.text,
+//                                                   _isMandatory);
+//                                               Navigator.of(context).pop();
+//                                               setState(() {});
+//                                             },
+//                                             child: Text('Editar'),
+//                                           ),
+//                                           TextButton(
+//                                             onPressed: () {
+//                                               Navigator.of(context).pop();
+//                                             },
+//                                             child: Text('Cancelar'),
+//                                           ),
+//                                         ],
+//                                       );
+//                                     },
+//                                   );
+//                                 },
+//                               ),
+//                               IconButton(
+//                                 icon: Icon(Icons.delete),
+//                                 onPressed: () {
+//                                   showDialog(
+//                                     context: context,
+//                                     builder: (context) {
+//                                       return AlertDialog(
+//                                         title: Text('Eliminar Pregunta'),
+//                                         content: Text(
+//                                             '¿Estás seguro de eliminar esta pregunta?'),
+//                                         actions: [
+//                                           TextButton(
+//                                             onPressed: () {
+//                                               _deleteQuestion(index);
+//                                               Navigator.of(context).pop();
+//                                               setState(() {});
+//                                             },
+//                                             child: Text('Eliminar'),
+//                                           ),
+//                                           TextButton(
+//                                             onPressed: () {
+//                                               Navigator.of(context).pop();
+//                                             },
+//                                             child: Text('Cancelar'),
+//                                           ),
+//                                         ],
+//                                       );
+//                                     },
+//                                   );
+//                                   setState(() {});
+//                                 },
+//                               ),
+//                             ],
+//                           ),
+//                         );
+//                       },
+//                     );
+//                   }
+//                 },
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 
 // import 'package:flutter/material.dart';

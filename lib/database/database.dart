@@ -3,35 +3,22 @@ import 'package:postgres/postgres.dart';
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
+  DatabaseHelper._internal();
 
-  late PostgreSQLConnection _connection;
-  List<String> questions = []; // Lista de preguntas de la encuesta actual
+  final PostgreSQLConnection _connection = PostgreSQLConnection(
+    'localhost',
+    5432,
+    'nombre_de_tu_base_de_datos',
+    username: 'tu_usuario',
+    password: 'tu_contraseña',
+  );
 
-  DatabaseHelper._internal() {
-    openConnection();
-  }
-
-  Future<void> openConnection() async {
+  Future<void> connect() async {
     try {
-      _connection = PostgreSQLConnection(
-        'localhost',
-        5432,
-        'Surveys',
-        username: 'Franco',
-        password: '160120',
-      );
       await _connection.open();
       print('Conexión exitosa');
     } catch (e) {
-      print('Error al abrir la conexión: $e');
-    }
-  }
-
-  Future<void> closeConnection() async {
-    try {
-      await _connection.close();
-    } catch (e) {
-      print('Error al cerrar la conexión: $e');
+      print('Error de conexión: $e');
     }
   }
 
@@ -41,49 +28,46 @@ class DatabaseHelper {
         'INSERT INTO encuestas (nombre_encuesta) VALUES (@surveyName)',
         substitutionValues: {'surveyName': surveyName},
       );
-      print('Encuesta insertada exitosamente');
     } catch (e) {
       print('Error al insertar encuesta: $e');
     }
   }
 
   Future<void> insertQuestion(
-    String surveyName,
-    String questionText,
-    bool isMandatory,
-  ) async {
+      String surveyName, String questionText, bool isMandatory) async {
     try {
       await _connection.query(
-        'INSERT INTO preguntas (id_encuesta, texto_pregunta, es_obligatoria) VALUES '
-        '((SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1), @questionText, @isMandatory)',
+        'INSERT INTO preguntas (id_encuesta, texto_pregunta, es_obligatoria) VALUES ((SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1), @questionText, @isMandatory)',
         substitutionValues: {
           'surveyName': surveyName,
           'questionText': questionText,
           'isMandatory': isMandatory,
         },
       );
-
-      questions = await getQuestionsForSurvey(surveyName);
-      print('Pregunta insertada exitosamente');
     } catch (e) {
       print('Error al insertar pregunta: $e');
     }
   }
 
-  Future<List<String>> getQuestionsForSurvey(String surveyName) async {
+  Future<List<Map<String, dynamic>>> getQuestionsForSurvey(
+      String surveyName) async {
     try {
       final result = await _connection.query(
-        'SELECT texto_pregunta, es_obligatoria FROM preguntas WHERE id_encuesta = (SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1)',
+        'SELECT id_pregunta, texto_pregunta, es_obligatoria FROM preguntas WHERE id_encuesta = (SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1)',
         substitutionValues: {'surveyName': surveyName},
       );
 
-      final List<String> retrievedQuestions = [];
+      final List<Map<String, dynamic>> retrievedQuestions = [];
 
       for (final row in result) {
-        final questionText = row[0] as String;
-        final isMandatory = row[1] as bool;
-        retrievedQuestions
-            .add('$questionText (Obligatoria: ${isMandatory ? 'Sí' : 'No'})');
+        final questionId = row[0] as int;
+        final questionText = row[1] as String;
+        final isMandatory = row[2] as bool;
+        retrievedQuestions.add({
+          'id': questionId,
+          'text': '$questionText (Obligatoria: ${isMandatory ? 'Sí' : 'No'})',
+          'isMandatory': isMandatory,
+        });
       }
 
       return retrievedQuestions;
@@ -92,7 +76,299 @@ class DatabaseHelper {
       return [];
     }
   }
+
+  Future<void> updateQuestion(String surveyName, int questionId,
+      String newQuestionText, bool isMandatory) async {
+    try {
+      await _connection.query(
+        'UPDATE preguntas SET texto_pregunta = @newQuestionText, es_obligatoria = @isMandatory WHERE id_pregunta = @questionId AND id_encuesta = (SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1)',
+        substitutionValues: {
+          'surveyName': surveyName,
+          'questionId': questionId,
+          'newQuestionText': newQuestionText,
+          'isMandatory': isMandatory,
+        },
+      );
+    } catch (e) {
+      print('Error al actualizar la pregunta: $e');
+    }
+  }
+
+  Future<void> deleteQuestion(String surveyName, int questionId) async {
+    try {
+      await _connection.query(
+        'DELETE FROM preguntas WHERE id_pregunta = @questionId AND id_encuesta = (SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1)',
+        substitutionValues: {
+          'surveyName': surveyName,
+          'questionId': questionId
+        },
+      );
+    } catch (e) {
+      print('Error al eliminar la pregunta: $e');
+    }
+  }
+
+  Future<void> close() async {
+    await _connection.close();
+  }
 }
+
+
+// import 'package:postgres/postgres.dart';
+
+// class DatabaseHelper {
+//   static final DatabaseHelper _instance = DatabaseHelper._internal();
+//   factory DatabaseHelper() => _instance;
+
+//   late PostgreSQLConnection _connection;
+//   List<String> questions = []; // Lista de preguntas de la encuesta actual
+
+//   DatabaseHelper._internal() {
+//     openConnection();
+//   }
+
+//   Future<void> openConnection() async {
+//     try {
+//       _connection = PostgreSQLConnection(
+//         'localhost',
+//         5432,
+//         'Surveys',
+//         username: 'Franco',
+//         password: '160120',
+//       );
+//       await _connection.open();
+//       print('Conexión exitosa');
+//     } catch (e) {
+//       print('Error al abrir la conexión: $e');
+//     }
+//   }
+
+//   Future<void> closeConnection() async {
+//     try {
+//       await _connection.close();
+//     } catch (e) {
+//       print('Error al cerrar la conexión: $e');
+//     }
+//   }
+
+//   Future<void> insertSurvey(String surveyName) async {
+//     try {
+//       await _connection.query(
+//         'INSERT INTO encuestas (nombre_encuesta) VALUES (@surveyName)',
+//         substitutionValues: {'surveyName': surveyName},
+//       );
+//       print('Encuesta insertada exitosamente');
+//     } catch (e) {
+//       print('Error al insertar encuesta: $e');
+//     }
+//   }
+
+//   Future<void> insertQuestion(
+//     String surveyName,
+//     String questionText,
+//     bool isMandatory,
+//   ) async {
+//     try {
+//       await _connection.query(
+//         'INSERT INTO preguntas (id_encuesta, texto_pregunta, es_obligatoria) VALUES '
+//         '((SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1), @questionText, @isMandatory)',
+//         substitutionValues: {
+//           'surveyName': surveyName,
+//           'questionText': questionText,
+//           'isMandatory': isMandatory,
+//         },
+//       );
+
+//       // questions = await getQuestionsForSurvey(surveyName);
+//       print('Pregunta insertada exitosamente');
+//     } catch (e) {
+//       print('Error al insertar pregunta: $e');
+//     }
+//   }
+
+//   Future<List<String>> getQuestionsForSurvey(String surveyName) async {
+//     try {
+//       final result = await _connection.query(
+//         'SELECT texto_pregunta, es_obligatoria FROM preguntas WHERE id_encuesta = (SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1)',
+//         substitutionValues: {'surveyName': surveyName},
+//       );
+
+//       final List<String> retrievedQuestions = [];
+
+//       for (final row in result) {
+//         final questionText = row[0] as String;
+//         final isMandatory = row[1] as bool;
+//         retrievedQuestions
+//             .add('$questionText (Obligatoria: ${isMandatory ? 'Sí' : 'No'})');
+//       }
+
+//       return retrievedQuestions;
+//     } catch (e) {
+//       print('Error al obtener preguntas: $e');
+//       return [];
+//     }
+//   }
+
+//   Future<void> deleteQuestion(String surveyName, int questionId) async {
+//     try {
+//       await _connection.query(
+//         'DELETE FROM preguntas WHERE id_encuesta = (SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1) AND id_pregunta = @questionId',
+//         substitutionValues: {
+//           'surveyName': surveyName,
+//           'questionId': questionId,
+//         },
+//       );
+//       print('Pregunta eliminada exitosamente');
+//     } catch (e) {
+//       print('Error al eliminar pregunta: $e');
+//     }
+//   }
+
+//   Future<void> updateQuestion(String surveyName, int questionId,
+//       String newQuestionText, bool isMandatory) async {
+//     try {
+//       await _connection.query(
+//         'UPDATE preguntas SET texto_pregunta = @newQuestionText, es_obligatoria = @isMandatory WHERE id_encuesta = (SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1) AND id_pregunta = @questionId',
+//         substitutionValues: {
+//           'surveyName': surveyName,
+//           'questionId': questionId,
+//           'newQuestionText': newQuestionText,
+//           'isMandatory': isMandatory,
+//         },
+//       );
+//       print('Pregunta actualizada exitosamente');
+//     } catch (e) {
+//       print('Error al actualizar pregunta: $e');
+//     }
+//   }
+// }
+
+// import 'package:postgres/postgres.dart';
+
+// class DatabaseHelper {
+//   static final DatabaseHelper _instance = DatabaseHelper._internal();
+//   factory DatabaseHelper() => _instance;
+
+//   late PostgreSQLConnection _connection;
+//   List<String> questions = []; // Lista de preguntas de la encuesta actual
+
+//   DatabaseHelper._internal() {
+//     openConnection();
+//   }
+
+//   Future<void> openConnection() async {
+//     try {
+//       _connection = PostgreSQLConnection(
+//         'localhost',
+//         5432,
+//         'Surveys',
+//         username: 'Franco',
+//         password: '160120',
+//       );
+//       await _connection.open();
+//       print('Conexión exitosa');
+//     } catch (e) {
+//       print('Error al abrir la conexión: $e');
+//     }
+//   }
+
+//   Future<void> closeConnection() async {
+//     try {
+//       await _connection.close();
+//     } catch (e) {
+//       print('Error al cerrar la conexión: $e');
+//     }
+//   }
+
+//   Future<void> insertSurvey(String surveyName) async {
+//     try {
+//       await _connection.query(
+//         'INSERT INTO encuestas (nombre_encuesta) VALUES (@surveyName)',
+//         substitutionValues: {'surveyName': surveyName},
+//       );
+//       print('Encuesta insertada exitosamente');
+//     } catch (e) {
+//       print('Error al insertar encuesta: $e');
+//     }
+//   }
+
+//   Future<void> insertQuestion(
+//     String surveyName,
+//     String questionText,
+//     bool isMandatory,
+//   ) async {
+//     try {
+//       await _connection.query(
+//         'INSERT INTO preguntas (id_encuesta, texto_pregunta, es_obligatoria) VALUES '
+//         '((SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1), @questionText, @isMandatory)',
+//         substitutionValues: {
+//           'surveyName': surveyName,
+//           'questionText': questionText,
+//           'isMandatory': isMandatory,
+//         },
+//       );
+
+//       questions = await getQuestionsForSurvey(surveyName);
+//       print('Pregunta insertada exitosamente');
+//     } catch (e) {
+//       print('Error al insertar pregunta: $e');
+//     }
+//   }
+
+//   Future<List<String>> getQuestionsForSurvey(String surveyName) async {
+//     try {
+//       final result = await _connection.query(
+//         'SELECT texto_pregunta, es_obligatoria FROM preguntas WHERE id_encuesta = (SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName LIMIT 1)',
+//         substitutionValues: {'surveyName': surveyName},
+//       );
+
+//       final List<String> retrievedQuestions = [];
+
+//       for (final row in result) {
+//         final questionText = row[0] as String;
+//         final isMandatory = row[1] as bool;
+//         retrievedQuestions
+//             .add('$questionText (Obligatoria: ${isMandatory ? 'Sí' : 'No'})');
+//       }
+
+//       return retrievedQuestions;
+//     } catch (e) {
+//       print('Error al obtener preguntas: $e');
+//       return [];
+//     }
+//   }
+
+//   Future<void> deleteQuestion(String surveyName, String questionText) async {
+//     try {
+//       await _connection.query(
+//         'DELETE FROM preguntas WHERE id_encuesta = (SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName) AND texto_pregunta = @questionText',
+//         substitutionValues: {
+//           'surveyName': surveyName,
+//           'questionText': questionText
+//         },
+//       );
+//     } catch (e) {
+//       print('Error al eliminar pregunta: $e');
+//     }
+//   }
+
+//   Future<void> updateQuestion(String surveyName, String oldQuestionText,
+//       String newQuestionText, bool isMandatory) async {
+//     try {
+//       await _connection.query(
+//         'UPDATE preguntas SET texto_pregunta = @newQuestionText, es_obligatoria = @isMandatory WHERE id_encuesta = (SELECT id_encuesta FROM encuestas WHERE nombre_encuesta = @surveyName) AND texto_pregunta = @oldQuestionText',
+//         substitutionValues: {
+//           'surveyName': surveyName,
+//           'oldQuestionText': oldQuestionText,
+//           'newQuestionText': newQuestionText,
+//           'isMandatory': isMandatory,
+//         },
+//       );
+//     } catch (e) {
+//       print('Error al actualizar pregunta: $e');
+//     }
+//   }
+// }
 
 
 // import 'package:postgres/postgres.dart';

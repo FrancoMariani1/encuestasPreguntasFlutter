@@ -1,170 +1,170 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../question_widget.dart';
-import '../providers/survey_provider.dart';
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+// import '../question_widget.dart';
+// import '../providers/survey_provider.dart';
 
-class SurveyGenerationScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Generación de Encuestas'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SurveyNameInput(),
-            SizedBox(height: 20),
-            AddQuestionSection(),
-            SizedBox(height: 20),
-            Expanded(child: QuestionsList()),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// class SurveyGenerationScreen extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('Generación de Encuestas'),
+//       ),
+//       body: Padding(
+//         padding: const EdgeInsets.all(16.0),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             SurveyNameInput(),
+//             SizedBox(height: 20),
+//             AddQuestionSection(),
+//             SizedBox(height: 20),
+//             Expanded(child: QuestionsList()),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
-class SurveyNameInput extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildTitle('Nombre de la Encuesta:'),
-        SizedBox(height: 8),
-        TextField(
-          onChanged: (value) {
-            Provider.of<SurveyProvider>(context, listen: false)
-                .updateSurveyName(value);
-          },
-          decoration:
-              _buildInputDecoration('Introduce el nombre de la encuesta'),
-        ),
-      ],
-    );
-  }
+// class SurveyNameInput extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         _buildTitle('Nombre de la Encuesta:'),
+//         SizedBox(height: 8),
+//         TextField(
+//           onChanged: (value) {
+//             Provider.of<SurveyProvider>(context, listen: false)
+//                 .updateSurveyName(value);
+//           },
+//           decoration:
+//               _buildInputDecoration('Introduce el nombre de la encuesta'),
+//         ),
+//       ],
+//     );
+//   }
 
-  Text _buildTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-    );
-  }
+//   Text _buildTitle(String title) {
+//     return Text(
+//       title,
+//       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//     );
+//   }
 
-  InputDecoration _buildInputDecoration(String hintText) {
-    return InputDecoration(
-      hintText: hintText,
-      border: OutlineInputBorder(),
-    );
-  }
-}
+//   InputDecoration _buildInputDecoration(String hintText) {
+//     return InputDecoration(
+//       hintText: hintText,
+//       border: OutlineInputBorder(),
+//     );
+//   }
+// }
 
-class AddQuestionSection extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildTitle('Agregar Pregunta:'),
-        SizedBox(height: 8),
-        TextField(
-          onChanged: (value) {
-            Provider.of<SurveyProvider>(context, listen: false)
-                .updateQuestionText(value);
-          },
-          decoration: _buildInputDecoration('Texto de la Pregunta'),
-        ),
-        SizedBox(height: 10),
-        _buildMandatoryCheckbox(context),
-        _buildAddButton(context),
-      ],
-    );
-  }
+// class AddQuestionSection extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         _buildTitle('Agregar Pregunta:'),
+//         SizedBox(height: 8),
+//         TextField(
+//           onChanged: (value) {
+//             Provider.of<SurveyProvider>(context, listen: false)
+//                 .updateQuestionText(value);
+//           },
+//           decoration: _buildInputDecoration('Texto de la Pregunta'),
+//         ),
+//         SizedBox(height: 10),
+//         _buildMandatoryCheckbox(context),
+//         _buildAddButton(context),
+//       ],
+//     );
+//   }
 
-  Text _buildTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-    );
-  }
+//   Text _buildTitle(String title) {
+//     return Text(
+//       title,
+//       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//     );
+//   }
 
-  InputDecoration _buildInputDecoration(String hintText) {
-    return InputDecoration(
-      hintText: hintText,
-      border: OutlineInputBorder(),
-    );
-  }
+//   InputDecoration _buildInputDecoration(String hintText) {
+//     return InputDecoration(
+//       hintText: hintText,
+//       border: OutlineInputBorder(),
+//     );
+//   }
 
-  Row _buildMandatoryCheckbox(BuildContext context) {
-    return Row(
-      children: [
-        Text('Obligatoria:', style: TextStyle(fontSize: 16)),
-        Checkbox(
-          value: Provider.of<SurveyProvider>(context).isMandatory,
-          onChanged: (value) {
-            if (value != null) {
-              Provider.of<SurveyProvider>(context, listen: false)
-                  .updateIsMandatory(value);
-            }
-          },
-        ),
-      ],
-    );
-  }
+//   Row _buildMandatoryCheckbox(BuildContext context) {
+//     return Row(
+//       children: [
+//         Text('Obligatoria:', style: TextStyle(fontSize: 16)),
+//         Checkbox(
+//           value: Provider.of<SurveyProvider>(context).isMandatory,
+//           onChanged: (value) {
+//             if (value != null) {
+//               Provider.of<SurveyProvider>(context, listen: false)
+//                   .updateIsMandatory(value);
+//             }
+//           },
+//         ),
+//       ],
+//     );
+//   }
 
-  ElevatedButton _buildAddButton(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () async {
-        await Provider.of<SurveyProvider>(context, listen: false).addQuestion();
-        final provider = Provider.of<SurveyProvider>(context, listen: false);
-        if (provider.errorMessage != null) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(provider.errorMessage!)));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Pregunta agregada correctamente')));
-        }
-      },
-      child: Text('Agregar Pregunta'),
-    );
-  }
-}
+//   ElevatedButton _buildAddButton(BuildContext context) {
+//     return ElevatedButton(
+//       onPressed: () async {
+//         await Provider.of<SurveyProvider>(context, listen: false).addQuestion();
+//         final provider = Provider.of<SurveyProvider>(context, listen: false);
+//         if (provider.errorMessage != null) {
+//           ScaffoldMessenger.of(context)
+//               .showSnackBar(SnackBar(content: Text(provider.errorMessage!)));
+//         } else {
+//           ScaffoldMessenger.of(context).showSnackBar(
+//               SnackBar(content: Text('Pregunta agregada correctamente')));
+//         }
+//       },
+//       child: Text('Agregar Pregunta'),
+//     );
+//   }
+// }
 
-class QuestionsList extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildTitle('Preguntas Agregadas:'),
-        Expanded(child: _buildQuestionsListView(context)),
-      ],
-    );
-  }
+// class QuestionsList extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         _buildTitle('Preguntas Agregadas:'),
+//         Expanded(child: _buildQuestionsListView(context)),
+//       ],
+//     );
+//   }
 
-  Text _buildTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-    );
-  }
+//   Text _buildTitle(String title) {
+//     return Text(
+//       title,
+//       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//     );
+//   }
 
-  Widget _buildQuestionsListView(BuildContext context) {
-    return ListView.builder(
-      itemCount: Provider.of<SurveyProvider>(context).questions.length,
-      itemBuilder: (context, index) {
-        final question = Provider.of<SurveyProvider>(context).questions[index];
-        return QuestionWidget(
-          questionText: question['questionText'],
-          isMandatory: question['isMandatory'],
-        );
-      },
-    );
-  }
-}
+//   Widget _buildQuestionsListView(BuildContext context) {
+//     return ListView.builder(
+//       itemCount: Provider.of<SurveyProvider>(context).questions.length,
+//       itemBuilder: (context, index) {
+//         final question = Provider.of<SurveyProvider>(context).questions[index];
+//         return QuestionWidget(
+//           questionText: question['questionText'],
+//           isMandatory: question['isMandatory'],
+//         );
+//       },
+//     );
+//   }
+// }
 
 
 

@@ -1,12 +1,12 @@
-class Question {
-  final String questionText;
-  final bool isMandatory;
+// class Question {
+//   final String questionText;
+//   final bool isMandatory;
 
-  Question({
-    required this.questionText,
-    required this.isMandatory,
-  });
-}
+//   Question({
+//     required this.questionText,
+//     required this.isMandatory,
+//   });
+// }
 
 
 // class Survey {
