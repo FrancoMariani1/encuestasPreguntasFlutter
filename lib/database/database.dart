@@ -139,6 +139,43 @@ class DatabaseHelper {
     }
   }
 
+  // Future<void> deleteSurvey(int surveyId) async {
+  //   try {
+  //     await _connection.query(
+  //       'DELETE FROM encuestas WHERE id_encuesta = @surveyId',
+  //       substitutionValues: {'surveyId': surveyId},
+  //     );
+  //   } catch (e) {
+  //     print('Error al eliminar la encuesta: $e');
+  //   }
+  // }
+
+  Future<void> deleteQuestionsForSurvey(int surveyId) async {
+    try {
+      await _connection.query(
+        'DELETE FROM preguntas WHERE id_encuesta = @surveyId',
+        substitutionValues: {'surveyId': surveyId},
+      );
+    } catch (e) {
+      print('Error al eliminar las preguntas: $e');
+    }
+  }
+
+  Future<void> deleteSurvey(int surveyId) async {
+    try {
+      // Primero, elimina las preguntas asociadas a esta encuesta
+      await deleteQuestionsForSurvey(surveyId);
+
+      // Luego, elimina la encuesta
+      await _connection.query(
+        'DELETE FROM encuestas WHERE id_encuesta = @surveyId',
+        substitutionValues: {'surveyId': surveyId},
+      );
+    } catch (e) {
+      print('Error al eliminar la encuesta: $e');
+    }
+  }
+
   Future<void> close() async {
     await _connection.close();
   }

@@ -44,6 +44,21 @@ class _SurveyAppState extends State<SurveyApp> {
     _fetchSurveys();
   }
 
+  Future<void> _deleteSurveyHandler(int surveyId) async {
+    bool confirmed = await _showDeleteConfirmationDialog(
+      context,
+      '¿Estás seguro de eliminar esta encuesta?',
+    );
+    if (confirmed) {
+      try {
+        await widget.dbHelper.deleteSurvey(surveyId);
+        _fetchSurveys();
+      } catch (e) {
+        print('Error al eliminar la encuesta: $e');
+      }
+    }
+  }
+
   Future<void> _fetchSurveys() async {
     final surveys = await widget.dbHelper.getSurveys();
     setState(() {
@@ -71,6 +86,34 @@ class _SurveyAppState extends State<SurveyApp> {
     }
   }
 
+  Future<bool> _showDeleteConfirmationDialog(
+      BuildContext context, String message) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Confirmación'),
+              content: Text(message),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Cancelar'),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),
+                TextButton(
+                  child: Text('Aceptar'),
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // Si se hace clic fuera del cuadro de diálogo, devuelve false
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,21 +125,43 @@ class _SurveyAppState extends State<SurveyApp> {
         child: Column(
           children: [
             if (_surveys.isNotEmpty)
-              DropdownButton<int>(
-                value: _selectedSurveyId,
-                items: _surveys.map((survey) {
-                  return DropdownMenuItem<int>(
-                    value: survey['id'],
-                    child: Text(survey['name']),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedSurveyId = newValue;
-                    _selectedSurvey = _surveys.firstWhere(
-                        (survey) => survey['id'] == newValue)['name'];
-                  });
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                      child: DropdownButton<int>(
+                    value: _selectedSurveyId,
+                    items: _surveys.map((survey) {
+                      return DropdownMenuItem<int>(
+                        value: survey['id'],
+                        child: Text(survey['name']),
+                      );
+                    }).toList(),
+                    // DropdownButton<int>(
+                    //   value: _selectedSurveyId,
+                    //   items: _surveys.map((survey) {
+                    //     return DropdownMenuItem<int>(
+                    //       value: survey['id'],
+                    //       child: Text(survey['name']),
+                    //     );
+                    //   }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedSurveyId = newValue;
+                        _selectedSurvey = _surveys.firstWhere(
+                            (survey) => survey['id'] == newValue)['name'];
+                      });
+                    },
+                  )),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      if (_selectedSurveyId != null) {
+                        _deleteSurveyHandler(_selectedSurveyId!);
+                      }
+                    },
+                  )
+                ],
               ),
             TextField(
               controller: _surveyController,
